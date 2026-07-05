@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  avatarUrl String?
+  bio       String?
+  isPrivate Boolean  @default(false)
+  photos    Photo[]
+  reviews   Review[]
+  likes     Like[]
+  followers User[]   @relation("UserFollows")
+  following User[]   @relation("UserFollows")
+
+  sentFollowRequests     FollowRequest[] @relation("FollowRequestSender")
+  receivedFollowRequests FollowRequest[] @relation("FollowRequestReceiver")
+  notifications          Notification[]
+
+  createdAt DateTime @default(now())
+}
+
+enum FollowRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model FollowRequest {
+  id          String              @id @default(uuid())
+  followerId  String
+  follower    User                @relation("FollowRequestSender", fields: [followerId], references: [id])
+  followingId String
+  following   User                @relation("FollowRequestReceiver", fields: [followingId], references: [id])
+  status      FollowRequestStatus @default(PENDING)
+  createdAt   DateTime            @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+enum NotificationType {
+  FOLLOW_REQUEST
+  FOLLOW_ACCEPTED
+  NEW_REVIEW
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  relatedId String?
+  createdAt DateTime         @default(now())
+}
+
+model Photo {
+  id                String    @id @default(uuid())
+  title             String
+  description       String?
+  imageUrl          String
+  cameraModel       String?
+  lensModel         String?
+  aperture          Float?
+  shutterSpeed      String?
+  iso               Int?
+  focalLength       Int?
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+  reviews           Review[]
+  likes             Like[]
+  perfectCount      Int       @default(0)
+  createdAt         DateTime  @default(now())
+}
+
+model Review {
+  id          String       @id @default(uuid())
+  content     String
+  photoId     String
+  photo       Photo        @relation(fields: [photoId], references: [id])
+  userId      String
+  author      User         @relation(fields: [userId], references: [id])
+  annotations Annotation[]
+  createdAt   DateTime     @default(now())
+}
+
+model Annotation {
+  id       String  @id @default(uuid())
+  type     String
+  data     Json
+  color    String  @default("#ff0000")
+  comment  String?
+  reviewId String
+  review   Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  userId  String
+  photoId String
+  user    User   @relation(fields: [userId], references: [id])
+  photo   Photo  @relation(fields: [photoId], references: [id])
+
+  @@id([userId, photoId])
+}

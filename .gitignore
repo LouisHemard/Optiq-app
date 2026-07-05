@@ -1,0 +1,32 @@
+# Dépendances
+node_modules/
+
+# Build
+dist/
+build/
+
+# Environnement
+.env
+.env.*
+!.env.example
+
+# Uploads locaux (stockage en prod = Supabase)
+server/uploads/
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tests
+coverage/
+
+# Prisma
+server/src/generated/prisma/

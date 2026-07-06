@@ -30,3 +30,7 @@ coverage/
 
 # Prisma
 server/src/generated/prisma/
+
+# Documentation
+docs/
+*.md

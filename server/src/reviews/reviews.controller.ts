@@ -12,7 +12,10 @@ import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CurrentUser, type CurrentUserPayload } from '../auth/current-user.decorator';
+import {
+  CurrentUser,
+  type CurrentUserPayload,
+} from '../auth/current-user.decorator';
 
 @Controller('reviews')
 export class ReviewsController {

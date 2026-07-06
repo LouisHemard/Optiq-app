@@ -13,7 +13,8 @@ export class LocalStorageService {
 
   constructor() {
     this.uploadsPath = join(process.cwd(), UPLOADS_DIR);
-    this.baseUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 3002}`;
+    this.baseUrl =
+      process.env.APP_URL || `http://localhost:${process.env.PORT || 3002}`;
     mkdirSync(this.uploadsPath, { recursive: true });
   }
 

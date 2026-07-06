@@ -25,13 +25,19 @@ export class PhotosService {
       try {
         return await this.supabaseStorage.save(file);
       } catch (err) {
-        console.warn('[PhotosService] Supabase upload failed, falling back to local:', (err as Error)?.message);
+        console.warn(
+          '[PhotosService] Supabase upload failed, falling back to local:',
+          (err as Error)?.message,
+        );
       }
     }
     try {
       return this.localStorage.save(file);
     } catch (err) {
-      console.warn('[PhotosService] Local storage failed, using fallback URL:', (err as Error)?.message);
+      console.warn(
+        '[PhotosService] Local storage failed, using fallback URL:',
+        (err as Error)?.message,
+      );
       return FALLBACK_IMAGE_URL;
     }
   }
@@ -56,9 +62,7 @@ export class PhotosService {
     });
   }
 
-  private async extractExif(
-    buffer: Buffer,
-  ): Promise<{
+  private async extractExif(buffer: Buffer): Promise<{
     iso?: number;
     aperture?: number;
     shutterSpeed?: string;
@@ -73,8 +77,7 @@ export class PhotosService {
       }
 
       const isoRaw = tags.ISO != null ? Number(tags.ISO) : undefined;
-      const aperture =
-        tags.FNumber != null ? Number(tags.FNumber) : undefined;
+      const aperture = tags.FNumber != null ? Number(tags.FNumber) : undefined;
       const exposureTime = tags.ExposureTime;
       const shutterSpeed =
         exposureTime != null ? String(exposureTime) : undefined;
@@ -123,10 +126,16 @@ export class PhotosService {
     const where: Prisma.PhotoWhereInput = {};
 
     if (query.cameraModel?.trim()) {
-      where.cameraModel = { contains: query.cameraModel.trim(), mode: 'insensitive' };
+      where.cameraModel = {
+        contains: query.cameraModel.trim(),
+        mode: 'insensitive',
+      };
     }
     if (query.lensModel?.trim()) {
-      where.lensModel = { contains: query.lensModel.trim(), mode: 'insensitive' };
+      where.lensModel = {
+        contains: query.lensModel.trim(),
+        mode: 'insensitive',
+      };
     }
     const minIso = query.minIso != null ? Number(query.minIso) : undefined;
     const maxIso = query.maxIso != null ? Number(query.maxIso) : undefined;
@@ -136,8 +145,10 @@ export class PhotosService {
         ...(Number.isFinite(maxIso) && { lte: maxIso }),
       };
     }
-    const minAperture = query.minAperture != null ? Number(query.minAperture) : undefined;
-    const maxAperture = query.maxAperture != null ? Number(query.maxAperture) : undefined;
+    const minAperture =
+      query.minAperture != null ? Number(query.minAperture) : undefined;
+    const maxAperture =
+      query.maxAperture != null ? Number(query.maxAperture) : undefined;
     if (Number.isFinite(minAperture) || Number.isFinite(maxAperture)) {
       where.aperture = {
         ...(Number.isFinite(minAperture) && { gte: minAperture }),
@@ -181,7 +192,9 @@ export class PhotosService {
         }),
       },
     });
-    const { likes, ...rest } = photo as typeof photo & { likes?: { userId: string }[] };
+    const { likes, ...rest } = photo as typeof photo & {
+      likes?: { userId: string }[];
+    };
     return {
       ...rest,
       isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
@@ -220,7 +233,9 @@ export class PhotosService {
       where: { userId_photoId: { userId, photoId } },
     });
     if (existing) {
-      await this.prisma.like.delete({ where: { userId_photoId: { userId, photoId } } });
+      await this.prisma.like.delete({
+        where: { userId_photoId: { userId, photoId } },
+      });
       const count = await this.prisma.like.count({ where: { photoId } });
       return { liked: false, likesCount: count };
     }

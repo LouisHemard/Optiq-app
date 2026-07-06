@@ -8,9 +8,7 @@ describe('AnnotationsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AnnotationsController],
-      providers: [
-        { provide: AnnotationsService, useValue: {} },
-      ],
+      providers: [{ provide: AnnotationsService, useValue: {} }],
     }).compile();
 
     controller = module.get<AnnotationsController>(AnnotationsController);

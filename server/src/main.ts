@@ -15,9 +15,7 @@ if (!existsSync(UPLOADS_DIR)) {
 
 async function bootstrap() {
   Sentry.init({
-    dsn:
-      process.env.SENTRY_DSN ||
-      'https://public@sentry.example.com/1',
+    dsn: process.env.SENTRY_DSN || 'https://public@sentry.example.com/1',
     environment: process.env.NODE_ENV || 'development',
     integrations: [nodeProfilingIntegration()],
     tracesSampleRate: 1.0,

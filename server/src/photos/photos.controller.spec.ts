@@ -8,9 +8,7 @@ describe('PhotosController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PhotosController],
-      providers: [
-        { provide: PhotosService, useValue: {} },
-      ],
+      providers: [{ provide: PhotosService, useValue: {} }],
     }).compile();
 
     controller = module.get<PhotosController>(PhotosController);

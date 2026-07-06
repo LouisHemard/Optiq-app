@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -9,7 +13,10 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(String(createUserDto.password), 10);
+    const hashedPassword = await bcrypt.hash(
+      String(createUserDto.password),
+      10,
+    );
     const data = {
       email: String(createUserDto.email).trim(),
       username: String(createUserDto.username).trim(),
@@ -19,9 +26,14 @@ export class UsersService {
       return await this.prisma.user.create({ data });
     } catch (err: unknown) {
       console.error('[UsersService.create]', err);
-      const code = err && typeof err === 'object' && 'code' in err ? (err as { code: string }).code : '';
+      const code =
+        err && typeof err === 'object' && 'code' in err
+          ? (err as { code: string }).code
+          : '';
       if (code === 'P2002') {
-        throw new ConflictException('Un compte existe déjà avec cet email ou ce nom d\'utilisateur.');
+        throw new ConflictException(
+          "Un compte existe déjà avec cet email ou ce nom d'utilisateur.",
+        );
       }
       throw err;
     }
@@ -85,7 +97,12 @@ export class UsersService {
 
     if (target.isPrivate) {
       const existing = await this.prisma.followRequest.findUnique({
-        where: { followerId_followingId: { followerId: currentUserId, followingId: targetId } },
+        where: {
+          followerId_followingId: {
+            followerId: currentUserId,
+            followingId: targetId,
+          },
+        },
       });
 
       if (existing) {
@@ -106,7 +123,7 @@ export class UsersService {
         data: {
           userId: targetId,
           type: 'FOLLOW_REQUEST',
-          message: `${currentUser?.username ?? 'Quelqu\'un'} souhaite vous suivre.`,
+          message: `${currentUser?.username ?? "Quelqu'un"} souhaite vous suivre.`,
           relatedId: currentUserId,
         },
       });
@@ -201,14 +218,18 @@ export class UsersService {
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
 
     const isOwner = currentUserId === targetId;
-    const isFollower = Array.isArray(user.followers) && user.followers.length > 0;
+    const isFollower =
+      Array.isArray(user.followers) && user.followers.length > 0;
     const canSeeContent = !user.isPrivate || isOwner || isFollower;
 
     let hasPendingRequest = false;
     if (currentUserId && !isOwner && !isFollower && user.isPrivate) {
       const pending = await this.prisma.followRequest.findUnique({
         where: {
-          followerId_followingId: { followerId: currentUserId, followingId: targetId },
+          followerId_followingId: {
+            followerId: currentUserId,
+            followingId: targetId,
+          },
           status: 'PENDING',
         },
       });
@@ -230,7 +251,10 @@ export class UsersService {
     };
   }
 
-  async updateSettings(userId: string, data: { bio?: string; avatarUrl?: string; isPrivate?: boolean }) {
+  async updateSettings(
+    userId: string,
+    data: { bio?: string; avatarUrl?: string; isPrivate?: boolean },
+  ) {
     return this.prisma.user.update({
       where: { id: userId },
       data,

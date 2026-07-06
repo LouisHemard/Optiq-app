@@ -20,7 +20,10 @@ import { UpdatePhotoDto } from './dto/update-photo.dto';
 import { FeedQueryDto } from './dto/feed-query.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtAuthOptionalGuard } from '../auth/jwt-auth-optional.guard';
-import { CurrentUser, type CurrentUserPayload } from '../auth/current-user.decorator';
+import {
+  CurrentUser,
+  type CurrentUserPayload,
+} from '../auth/current-user.decorator';
 
 @Controller('photos')
 export class PhotosController {
@@ -38,7 +41,9 @@ export class PhotosController {
     @Body() createPhotoDto: CreatePhotoDto,
   ) {
     if (!file?.buffer) {
-      throw new BadRequestException('Un fichier image est requis (champ "file")');
+      throw new BadRequestException(
+        'Un fichier image est requis (champ "file")',
+      );
     }
     return this.photosService.create(file, createPhotoDto);
   }
@@ -50,7 +55,10 @@ export class PhotosController {
 
   @Get('feed')
   @UseGuards(JwtAuthOptionalGuard)
-  getFeed(@Query() query: FeedQueryDto, @CurrentUser() user: CurrentUserPayload | null) {
+  getFeed(
+    @Query() query: FeedQueryDto,
+    @CurrentUser() user: CurrentUserPayload | null,
+  ) {
     return this.photosService.getFeed(query, user?.id);
   }
 
@@ -62,7 +70,10 @@ export class PhotosController {
 
   @Get(':id')
   @UseGuards(JwtAuthOptionalGuard)
-  findOne(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload | null) {
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload | null,
+  ) {
     return this.photosService.findOne(id, user?.id);
   }
 

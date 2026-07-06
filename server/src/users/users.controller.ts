@@ -1,11 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtAuthOptionalGuard } from '../auth/jwt-auth-optional.guard';
-import { CurrentUser, type CurrentUserPayload } from '../auth/current-user.decorator';
+import {
+  CurrentUser,
+  type CurrentUserPayload,
+} from '../auth/current-user.decorator';
 
 @Controller('users')
 export class UsersController {

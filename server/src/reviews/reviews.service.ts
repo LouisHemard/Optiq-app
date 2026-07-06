@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -23,20 +27,29 @@ export class ReviewsService {
           })),
         },
       },
-      include: { annotations: true, author: { select: { username: true, avatarUrl: true } } },
+      include: {
+        annotations: true,
+        author: { select: { username: true, avatarUrl: true } },
+      },
     });
   }
 
   findAll() {
     return this.prisma.review.findMany({
-      include: { annotations: true, author: { select: { username: true, avatarUrl: true } } },
+      include: {
+        annotations: true,
+        author: { select: { username: true, avatarUrl: true } },
+      },
     });
   }
 
   findOne(id: string) {
     return this.prisma.review.findUniqueOrThrow({
       where: { id },
-      include: { annotations: true, author: { select: { username: true, avatarUrl: true } } },
+      include: {
+        annotations: true,
+        author: { select: { username: true, avatarUrl: true } },
+      },
     });
   }
 

@@ -55,10 +55,18 @@ describe('AuthService', () => {
       mockedBcrypt.compare.mockImplementation(() => Promise.resolve(true));
       jwtService.sign.mockReturnValue('signed.jwt.token');
 
-      const result = await authService.login('alice@example.com', 'goodpassword');
+      const result = await authService.login(
+        'alice@example.com',
+        'goodpassword',
+      );
 
-      expect(usersService.findByEmail).toHaveBeenCalledWith('alice@example.com');
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith('goodpassword', fakeUser.password);
+      expect(usersService.findByEmail).toHaveBeenCalledWith(
+        'alice@example.com',
+      );
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        'goodpassword',
+        fakeUser.password,
+      );
       expect(jwtService.sign).toHaveBeenCalledWith({
         sub: fakeUser.id,
         username: fakeUser.username,
@@ -99,7 +107,10 @@ describe('AuthService', () => {
         authService.login('alice@example.com', 'wrongpassword'),
       ).rejects.toThrow(UnauthorizedException);
 
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith('wrongpassword', fakeUser.password);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        'wrongpassword',
+        fakeUser.password,
+      );
       expect(jwtService.sign).not.toHaveBeenCalled();
     });
 

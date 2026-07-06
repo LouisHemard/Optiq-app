@@ -29,7 +29,9 @@ export class SupabaseStorageService {
    */
   async save(file: Express.Multer.File): Promise<string> {
     if (!this.client) {
-      throw new Error('Supabase Storage non configuré (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)');
+      throw new Error(
+        'Supabase Storage non configuré (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)',
+      );
     }
     const ext = this.getExtension(file.originalname) || '.jpg';
     const path = `${randomUUID()}${ext}`;
@@ -42,7 +44,9 @@ export class SupabaseStorageService {
     if (error) {
       throw new Error(`Supabase upload: ${error.message}`);
     }
-    const { data: urlData } = this.client.storage.from(this.bucket).getPublicUrl(data.path);
+    const { data: urlData } = this.client.storage
+      .from(this.bucket)
+      .getPublicUrl(data.path);
     return urlData.publicUrl;
   }
 

@@ -37,7 +37,9 @@ export class SentryInterceptor implements NestInterceptor {
     return true;
   }
 
-  private buildExtraContext(context: ExecutionContext): Record<string, unknown> {
+  private buildExtraContext(
+    context: ExecutionContext,
+  ): Record<string, unknown> {
     const type = context.getType<'http' | 'rpc' | 'ws'>();
     if (type !== 'http') {
       return { contextType: type };

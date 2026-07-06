@@ -31,10 +31,18 @@ export class AnnotationsService {
     return this.prisma.annotation.update({
       where: { id },
       data: {
-        ...(updateAnnotationDto.type !== undefined && { type: updateAnnotationDto.type }),
-        ...(updateAnnotationDto.data !== undefined && { data: updateAnnotationDto.data as object }),
-        ...(updateAnnotationDto.color !== undefined && { color: updateAnnotationDto.color }),
-        ...(updateAnnotationDto.comment !== undefined && { comment: updateAnnotationDto.comment }),
+        ...(updateAnnotationDto.type !== undefined && {
+          type: updateAnnotationDto.type,
+        }),
+        ...(updateAnnotationDto.data !== undefined && {
+          data: updateAnnotationDto.data as object,
+        }),
+        ...(updateAnnotationDto.color !== undefined && {
+          color: updateAnnotationDto.color,
+        }),
+        ...(updateAnnotationDto.comment !== undefined && {
+          comment: updateAnnotationDto.comment,
+        }),
       },
     });
   }

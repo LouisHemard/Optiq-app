@@ -31,6 +31,14 @@ coverage/
 # Prisma
 server/src/generated/prisma/
 
-# Documentation
-docs/
-*.md
+# Documentation (fichiers internes, non présentés au jury)
+docs/API.md
+docs/ARCHITECTURE.md
+docs/DATABASE.md
+docs/FEATURES.md
+docs/CHARTE_GRAPHIQUE.md
+docs/CI_CD.md
+docs/MCO.md
+docs/TESTING.md
+docs/SECURITY.md
+docs/ACCESSIBILITY.md

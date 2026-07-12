@@ -10,6 +10,9 @@ import { RegisterPage } from './pages/RegisterPage';
 import { ExplorePage } from './pages/ExplorePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 function Navbar() {
   const { user, logoutUser } = useAuth();
@@ -128,6 +131,9 @@ function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/profile/:id" element={<ProfilePage />} />
               <Route path="/photo/:id" element={<PhotoPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Routes>
           </main>
         </div>

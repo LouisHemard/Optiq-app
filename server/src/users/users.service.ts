@@ -3,28 +3,40 @@ import {
   ConflictException,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const hashedPassword = await bcrypt.hash(
       String(createUserDto.password),
       10,
     );
+    const verifyToken = randomUUID();
+    const verifyTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const data = {
       email: String(createUserDto.email).trim(),
       username: String(createUserDto.username).trim(),
       password: hashedPassword,
+      verifyToken,
+      verifyTokenExpiry,
     };
     try {
-      return await this.prisma.user.create({ data });
+      const user = await this.prisma.user.create({ data });
+      this.mailService.sendVerificationEmail(user.email, verifyToken).catch(() => {});
+      return user;
     } catch (err: unknown) {
       console.error('[UsersService.create]', err);
       const code =
@@ -38,6 +50,45 @@ export class UsersService {
       }
       throw err;
     }
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.prisma.user.findUnique({ where: { verifyToken: token } });
+    if (!user || !user.verifyTokenExpiry || user.verifyTokenExpiry < new Date()) {
+      throw new BadRequestException('Lien de vérification invalide ou expiré.');
+    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { isEmailVerified: true, verifyToken: null, verifyTokenExpiry: null },
+    });
+    return { success: true };
+  }
+
+  async requestPasswordReset(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (user) {
+      const resetToken = randomUUID();
+      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { resetToken, resetTokenExpiry },
+      });
+      this.mailService.sendPasswordResetEmail(user.email, resetToken).catch(() => {});
+    }
+    return { success: true };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { resetToken: token } });
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      throw new BadRequestException('Lien de réinitialisation invalide ou expiré.');
+    }
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed, resetToken: null, resetTokenExpiry: null },
+    });
+    return { success: true };
   }
 
   findAll() {

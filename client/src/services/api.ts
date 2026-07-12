@@ -205,3 +205,15 @@ export async function searchUsers(q: string): Promise<User[]> {
   const { data } = await api.get<User[]>('/users/search', { params: { q } });
   return data;
 }
+
+export async function verifyEmail(token: string): Promise<void> {
+  await api.get('/users/verify-email', { params: { token } });
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post('/users/forgot-password', { email });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await api.post('/users/reset-password', { token, newPassword });
+}

@@ -12,6 +12,7 @@ export function RegisterPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +21,7 @@ export function RegisterPage() {
     setLoading(true);
     try {
       await createUser({ email: email.trim(), username: username.trim(), password });
+      setEmailSent(true);
       await loginUser(email.trim(), password);
       navigate('/');
     } catch (err: unknown) {
@@ -51,6 +53,11 @@ export function RegisterPage() {
             className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm"
           >
             {error}
+          </div>
+        )}
+        {emailSent && (
+          <div className="px-4 py-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+            Un email de vérification a été envoyé à <strong>{email}</strong>.
           </div>
         )}
 

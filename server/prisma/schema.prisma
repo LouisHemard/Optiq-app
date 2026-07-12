@@ -13,7 +13,12 @@ model User {
   password  String
   avatarUrl String?
   bio       String?
-  isPrivate Boolean  @default(false)
+  isPrivate         Boolean   @default(false)
+  isEmailVerified   Boolean   @default(false)
+  verifyToken       String?   @unique
+  verifyTokenExpiry DateTime?
+  resetToken        String?   @unique
+  resetTokenExpiry  DateTime?
   photos    Photo[]
   reviews   Review[]
   likes     Like[]

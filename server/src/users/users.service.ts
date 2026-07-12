@@ -334,6 +334,21 @@ export class UsersService {
   }
 
   async deleteMe(userId: string) {
-    return this.prisma.user.delete({ where: { id: userId } });
+    return this.prisma.$transaction(async (tx) => {
+      await tx.annotation.deleteMany({ where: { review: { userId } } });
+      await tx.annotation.deleteMany({ where: { review: { photo: { userId } } } });
+      await tx.review.deleteMany({ where: { photo: { userId } } });
+      await tx.review.deleteMany({ where: { userId } });
+      await tx.like.deleteMany({ where: { photo: { userId } } });
+      await tx.like.deleteMany({ where: { userId } });
+      await tx.userPerfectVote.deleteMany({ where: { photo: { userId } } });
+      await tx.userPerfectVote.deleteMany({ where: { userId } });
+      await tx.photo.deleteMany({ where: { userId } });
+      await tx.followRequest.deleteMany({
+        where: { OR: [{ followerId: userId }, { followingId: userId }] },
+      });
+      await tx.notification.deleteMany({ where: { userId } });
+      return tx.user.delete({ where: { id: userId } });
+    });
   }
 }

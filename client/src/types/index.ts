@@ -15,6 +15,7 @@ export interface Photo {
   shutterSpeed: string | null;
   iso: number | null;
   focalLength: number | null;
+  perfectCount?: number;
   userId: string;
   user: User;
   _count?: { reviews: number; likes: number };

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { SupabaseStorageService } from '../storage/supabase-storage.service';
@@ -8,7 +8,6 @@ import { FeedQueryDto } from './dto/feed-query.dto';
 import exifr from 'exifr';
 import { Prisma } from '@prisma/client';
 
-// Data URL SVG : affichage garanti sans requête externe ni CORS (fallback si erreur)
 const FALLBACK_IMAGE_URL =
   'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIj48cmVjdCBmaWxsPSIjMzc0MTUxIiB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIvPjx0ZXh0IHg9IjQwMCIgeT0iMzAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjOUNBM0FGIiBmb250LXNpemU9IjI0Ij5QaG90byBPcHRpcTwvdGV4dD48L3N2Zz4=';
 
@@ -42,7 +41,7 @@ export class PhotosService {
     }
   }
 
-  async create(file: Express.Multer.File, createPhotoDto: CreatePhotoDto) {
+  async create(file: Express.Multer.File, createPhotoDto: CreatePhotoDto, userId: string) {
     const exif = await this.extractExif(file.buffer);
     const imageUrl = await this.resolveImageUrl(file);
 
@@ -51,7 +50,7 @@ export class PhotosService {
         title: createPhotoDto.title,
         description: createPhotoDto.description ?? null,
         imageUrl,
-        userId: createPhotoDto.userId,
+        userId,
         iso: exif.iso,
         aperture: exif.aperture,
         shutterSpeed: exif.shutterSpeed,
@@ -244,14 +243,17 @@ export class PhotosService {
     return { liked: true, likesCount: count };
   }
 
-  update(id: string, updatePhotoDto: UpdatePhotoDto) {
-    return this.prisma.photo.update({
-      where: { id },
-      data: updatePhotoDto,
-    });
+  async update(id: string, updatePhotoDto: UpdatePhotoDto, userId: string) {
+    const photo = await this.prisma.photo.findUnique({ where: { id } });
+    if (!photo) throw new NotFoundException('Photo introuvable.');
+    if (photo.userId !== userId) throw new ForbiddenException('Vous ne pouvez pas modifier cette photo.');
+    return this.prisma.photo.update({ where: { id }, data: updatePhotoDto });
   }
 
-  remove(id: string) {
+  async remove(id: string, userId: string) {
+    const photo = await this.prisma.photo.findUnique({ where: { id } });
+    if (!photo) throw new NotFoundException('Photo introuvable.');
+    if (photo.userId !== userId) throw new ForbiddenException('Vous ne pouvez pas supprimer cette photo.');
     return this.prisma.photo.delete({ where: { id } });
   }
 }

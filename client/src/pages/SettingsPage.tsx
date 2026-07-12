@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { updateMe, getProfile } from '../services/api';
-import { Loader2, Settings, LogIn, Save, User as UserIcon } from 'lucide-react';
+import { updateMe, getProfile, changePassword, deleteMe } from '../services/api';
+import { Loader2, Settings, LogIn, Save, User as UserIcon, Lock, Trash2 } from 'lucide-react';
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logoutUser } = useAuth();
 
   const [avatarUrl, setAvatarUrl] = useState('');
   const [bio, setBio] = useState('');
@@ -15,6 +15,16 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdError, setPwdError] = useState<string | null>(null);
+  const [pwdSuccess, setPwdSuccess] = useState(false);
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -43,6 +53,44 @@ export function SettingsPage() {
       </div>
     );
   }
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError(null);
+    setPwdSuccess(false);
+    if (newPassword !== confirmPassword) {
+      setPwdError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPwdError('Le nouveau mot de passe doit faire au moins 6 caractères.');
+      return;
+    }
+    setPwdSaving(true);
+    changePassword({ currentPassword, newPassword })
+      .then(() => {
+        setPwdSuccess(true);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      })
+      .catch((err) => setPwdError(err.response?.data?.message ?? 'Erreur lors du changement de mot de passe'))
+      .finally(() => setPwdSaving(false));
+  };
+
+  const handleDeleteAccount = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    setDeleting(true);
+    deleteMe()
+      .then(() => {
+        logoutUser();
+        navigate('/');
+      })
+      .catch(() => setDeleting(false));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,6 +231,87 @@ export function SettingsPage() {
           {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
         </button>
       </form>
+
+      <form
+        onSubmit={handlePasswordChange}
+        className="rounded-2xl bg-gray-800/80 border border-gray-700 p-6 space-y-4 mt-6"
+      >
+        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+          <Lock className="w-5 h-5" />
+          Changer de mot de passe
+        </h2>
+        {pwdError && <p className="text-red-400 text-sm" role="alert">{pwdError}</p>}
+        {pwdSuccess && <p className="text-green-400 text-sm">Mot de passe modifié avec succès !</p>}
+        <div>
+          <label htmlFor="current-pwd" className="block text-sm font-medium text-gray-300 mb-2">Mot de passe actuel</label>
+          <input
+            id="current-pwd"
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+        </div>
+        <div>
+          <label htmlFor="new-pwd" className="block text-sm font-medium text-gray-300 mb-2">Nouveau mot de passe</label>
+          <input
+            id="new-pwd"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+            className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+        </div>
+        <div>
+          <label htmlFor="confirm-pwd" className="block text-sm font-medium text-gray-300 mb-2">Confirmer le nouveau mot de passe</label>
+          <input
+            id="confirm-pwd"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+            className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={pwdSaving || !currentPassword || !newPassword || !confirmPassword}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gray-700 text-white font-medium hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {pwdSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Lock className="w-5 h-5" />}
+          {pwdSaving ? 'Modification...' : 'Changer le mot de passe'}
+        </button>
+      </form>
+
+      <div className="rounded-2xl bg-gray-800/80 border border-red-900/50 p-6 mt-6 space-y-4">
+        <h2 className="text-lg font-semibold text-red-400 flex items-center gap-2">
+          <Trash2 className="w-5 h-5" />
+          Zone de danger
+        </h2>
+        <p className="text-sm text-gray-400">
+          La suppression de votre compte est <strong className="text-gray-300">irréversible</strong>. Toutes vos photos, critiques et annotations seront définitivement supprimées.
+        </p>
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          onBlur={() => setConfirmDelete(false)}
+          disabled={deleting}
+          aria-label={confirmDelete ? 'Confirmer la suppression du compte' : 'Supprimer mon compte'}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+            confirmDelete
+              ? 'bg-red-600 text-white hover:bg-red-500'
+              : 'bg-gray-900 text-red-400 border border-red-900/50 hover:bg-red-950/50'
+          }`}
+        >
+          {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          {confirmDelete ? 'Confirmer la suppression définitive' : 'Supprimer mon compte'}
+        </button>
+      </div>
     </div>
   );
 }

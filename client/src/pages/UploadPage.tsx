@@ -53,7 +53,6 @@ export function UploadPage() {
     formData.append('file', file);
     formData.append('title', title.trim());
     if (description.trim()) formData.append('description', description.trim());
-    formData.append('userId', user.id);
 
     if (selectedCamera === 'OTHER' && customCamera.trim()) {
       formData.append('cameraModel', customCamera.trim());

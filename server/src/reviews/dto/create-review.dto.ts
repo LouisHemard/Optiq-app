@@ -7,7 +7,6 @@ export class CreateReviewAnnotationDto {
 
 export class CreateReviewDto {
   photoId: string;
-  userId: string;
   content: string;
   annotations?: CreateReviewAnnotationDto[];
 }

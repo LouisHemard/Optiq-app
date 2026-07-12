@@ -30,22 +30,24 @@ export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
-      limits: { fileSize: 50 * 1024 * 1024 }, // 50 Mo
+      limits: { fileSize: 50 * 1024 * 1024 },
     }),
   )
   create(
     @UploadedFile() file: Express.Multer.File,
     @Body() createPhotoDto: CreatePhotoDto,
+    @CurrentUser() user: CurrentUserPayload,
   ) {
     if (!file?.buffer) {
       throw new BadRequestException(
         'Un fichier image est requis (champ "file")',
       );
     }
-    return this.photosService.create(file, createPhotoDto);
+    return this.photosService.create(file, createPhotoDto, user.id);
   }
 
   @Get()
@@ -84,17 +86,24 @@ export class PhotosController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePhotoDto: UpdatePhotoDto) {
-    return this.photosService.update(id, updatePhotoDto);
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updatePhotoDto: UpdatePhotoDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
+    return this.photosService.update(id, updatePhotoDto, user.id);
   }
 
   @Patch(':id/perfect')
+  @UseGuards(JwtAuthGuard)
   incrementPerfect(@Param('id') id: string) {
     return this.photosService.incrementPerfect(id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.photosService.remove(id);
+  @UseGuards(JwtAuthGuard)
+  remove(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.photosService.remove(id, user.id);
   }
 }

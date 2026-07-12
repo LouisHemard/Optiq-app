@@ -32,6 +32,7 @@ const makePrisma = () => ({
     create: jest.fn(),
     findMany: jest.fn(),
     findUniqueOrThrow: jest.fn(),
+    findUnique: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
   },
@@ -84,8 +85,8 @@ describe('PhotosService', () => {
       prisma.photo.create.mockResolvedValue(mockPhoto);
       supabaseStorage.isConfigured.mockReturnValue(false);
 
-      const dto = { title: 'Coucher de soleil', userId: 'user-1' };
-      const result = await service.create(fakeFile, dto);
+      const dto = { title: 'Coucher de soleil' };
+      const result = await service.create(fakeFile, dto, 'user-1');
 
       expect(localStorage.save).toHaveBeenCalledWith(fakeFile);
       expect(prisma.photo.create).toHaveBeenCalledWith(
@@ -101,7 +102,7 @@ describe('PhotosService', () => {
       supabaseStorage.save.mockResolvedValue('https://supabase/photo.jpg');
       prisma.photo.create.mockResolvedValue(mockPhoto);
 
-      await service.create(fakeFile, { title: 'Test', userId: 'user-1' });
+      await service.create(fakeFile, { title: 'Test' }, 'user-1');
 
       expect(supabaseStorage.save).toHaveBeenCalledWith(fakeFile);
       expect(localStorage.save).not.toHaveBeenCalled();
@@ -205,9 +206,10 @@ describe('PhotosService', () => {
   describe('update', () => {
     it('met à jour une photo', async () => {
       const updated = { ...mockPhoto, title: 'Nouveau titre' };
+      prisma.photo.findUnique.mockResolvedValue(mockPhoto);
       prisma.photo.update.mockResolvedValue(updated);
 
-      const result = await service.update('photo-1', { title: 'Nouveau titre' });
+      const result = await service.update('photo-1', { title: 'Nouveau titre' }, 'user-1');
 
       expect(prisma.photo.update).toHaveBeenCalledWith({
         where: { id: 'photo-1' },
@@ -219,9 +221,10 @@ describe('PhotosService', () => {
 
   describe('remove', () => {
     it('supprime une photo', async () => {
+      prisma.photo.findUnique.mockResolvedValue(mockPhoto);
       prisma.photo.delete.mockResolvedValue(mockPhoto);
 
-      const result = await service.remove('photo-1');
+      const result = await service.remove('photo-1', 'user-1');
 
       expect(prisma.photo.delete).toHaveBeenCalledWith({ where: { id: 'photo-1' } });
       expect(result).toEqual(mockPhoto);

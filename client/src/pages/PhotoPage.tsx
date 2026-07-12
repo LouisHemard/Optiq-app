@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getPhotoById, getPhotoReviews, createReview, deletePhoto, deleteReview, toggleLike } from '../services/api';
+import { getPhotoById, getPhotoReviews, createReview, deletePhoto, deleteReview, toggleLike, incrementPerfect } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ReviewCanvas, type NewAnnotation, type DrawTool } from '../components/ReviewCanvas';
 import { AnnotatedThumbnail } from '../components/AnnotatedThumbnail';
@@ -19,6 +19,7 @@ import {
   Trash2,
   X,
   Heart,
+  Star,
   User as UserIcon,
   Square,
   PenLine,
@@ -43,6 +44,8 @@ export function PhotoPage() {
   const [deleting, setDeleting] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [perfectCount, setPerfectCount] = useState(0);
+  const [votedPerfect, setVotedPerfect] = useState(false);
 
   const handleLike = () => {
     if (!id) return;
@@ -51,6 +54,16 @@ export function PhotoPage() {
     toggleLike(id).catch(() => {
       setLiked((v) => !v);
       setLikesCount((c) => (liked ? c + 1 : c - 1));
+    });
+  };
+
+  const handlePerfect = () => {
+    if (!id || !user || isOwner || votedPerfect) return;
+    setVotedPerfect(true);
+    setPerfectCount((c) => c + 1);
+    incrementPerfect(id).catch(() => {
+      setVotedPerfect(false);
+      setPerfectCount((c) => c - 1);
     });
   };
 
@@ -79,6 +92,7 @@ export function PhotoPage() {
           setReviews(reviewsData);
           setLiked(photoData.isLikedByMe ?? false);
           setLikesCount(photoData._count?.likes ?? 0);
+          setPerfectCount(photoData.perfectCount ?? 0);
         }
       })
       .catch((err) => {
@@ -111,7 +125,6 @@ export function PhotoPage() {
     setSubmitting(true);
     createReview({
       photoId: id,
-      userId: user.id,
       content: content.trim() || 'Critique visuelle',
       annotations: pendingAnnotations.map(({ type, data, color, comment }) => ({
         type,
@@ -156,6 +169,7 @@ export function PhotoPage() {
   ].filter(Boolean) as { icon: typeof Camera; label: string; tooltip: { title: string; description: string } }[];
 
   const isOwner = user?.id === photo.userId;
+  const canVotePerfect = !!user && !isOwner && !votedPerfect;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -185,6 +199,20 @@ export function PhotoPage() {
           >
             <Heart className={`w-5 h-5 ${liked ? 'fill-red-500 text-red-500' : ''}`} aria-hidden="true" />
             <span aria-label={`${likesCount} j'aime`}>{likesCount}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handlePerfect}
+            disabled={!canVotePerfect}
+            aria-label={votedPerfect ? 'Vous avez voté photo parfaite' : 'Voter pour photo parfaite'}
+            aria-pressed={votedPerfect}
+            title={isOwner ? 'Vous ne pouvez pas voter pour votre propre photo' : !user ? 'Connectez-vous pour voter' : votedPerfect ? 'Vous avez déjà voté' : 'Photo parfaite !'}
+            className={`flex items-center gap-1.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 rounded disabled:cursor-not-allowed ${
+              votedPerfect ? 'text-amber-400' : 'text-gray-400 hover:text-amber-400'
+            }`}
+          >
+            <Star className={`w-5 h-5 ${votedPerfect ? 'fill-amber-400 text-amber-400' : ''}`} aria-hidden="true" />
+            <span>{perfectCount}</span>
           </button>
         </div>
         {isOwner && (

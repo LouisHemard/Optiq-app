@@ -13,6 +13,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtAuthOptionalGuard } from '../auth/jwt-auth-optional.guard';
 import {
@@ -46,6 +47,21 @@ export class UsersController {
     @Body() dto: UpdateSettingsDto,
   ) {
     return this.usersService.updateSettings(user.id, dto);
+  }
+
+  @Post('me/password')
+  @UseGuards(JwtAuthGuard)
+  changePassword(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.usersService.changePassword(user.id, dto.currentPassword, dto.newPassword);
+  }
+
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  deleteMe(@CurrentUser() user: CurrentUserPayload) {
+    return this.usersService.deleteMe(user.id);
   }
 
   @Get('me/follow-requests')

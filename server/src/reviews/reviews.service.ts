@@ -11,12 +11,12 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 export class ReviewsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createReviewDto: CreateReviewDto) {
+  async create(createReviewDto: CreateReviewDto, reviewerId: string) {
     const annotations = createReviewDto.annotations ?? [];
-    return this.prisma.review.create({
+    const review = await this.prisma.review.create({
       data: {
         photoId: createReviewDto.photoId,
-        userId: createReviewDto.userId,
+        userId: reviewerId,
         content: createReviewDto.content,
         annotations: {
           create: annotations.map((a) => ({
@@ -29,16 +29,34 @@ export class ReviewsService {
       },
       include: {
         annotations: true,
-        author: { select: { username: true, avatarUrl: true } },
+        author: { select: { id: true, username: true, avatarUrl: true } },
       },
     });
+
+    const photo = await this.prisma.photo.findUnique({
+      where: { id: createReviewDto.photoId },
+      select: { userId: true, title: true },
+    });
+
+    if (photo && photo.userId !== reviewerId) {
+      await this.prisma.notification.create({
+        data: {
+          userId: photo.userId,
+          type: 'NEW_REVIEW',
+          message: `${review.author.username} a critiqué votre photo "${photo.title}".`,
+          relatedId: createReviewDto.photoId,
+        },
+      });
+    }
+
+    return review;
   }
 
   findAll() {
     return this.prisma.review.findMany({
       include: {
         annotations: true,
-        author: { select: { username: true, avatarUrl: true } },
+        author: { select: { id: true, username: true, avatarUrl: true } },
       },
     });
   }
@@ -48,7 +66,7 @@ export class ReviewsService {
       where: { id },
       include: {
         annotations: true,
-        author: { select: { username: true, avatarUrl: true } },
+        author: { select: { id: true, username: true, avatarUrl: true } },
       },
     });
   }
@@ -58,7 +76,7 @@ export class ReviewsService {
       where: { photoId },
       include: {
         annotations: true,
-        author: { select: { username: true, avatarUrl: true } },
+        author: { select: { id: true, username: true, avatarUrl: true } },
       },
     });
   }

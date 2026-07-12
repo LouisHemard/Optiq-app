@@ -9,7 +9,7 @@ const mockReview = {
   userId: 'user-1',
   content: 'Belle photo, bonne lumière.',
   annotations: [],
-  author: { username: 'alice', avatarUrl: null },
+  author: { id: 'user-1', username: 'alice', avatarUrl: null },
   createdAt: new Date(),
 };
 
@@ -22,6 +22,8 @@ const makePrisma = () => ({
     update: jest.fn(),
     delete: jest.fn(),
   },
+  photo: { findUnique: jest.fn() },
+  notification: { create: jest.fn() },
 });
 
 describe('ReviewsService', () => {
@@ -45,11 +47,15 @@ describe('ReviewsService', () => {
   });
 
   describe('create', () => {
-    it('crée une review sans annotations', async () => {
+    it('crée une review sans annotations et notifie le propriétaire', async () => {
       prisma.review.create.mockResolvedValue(mockReview);
+      prisma.photo.findUnique.mockResolvedValue({ userId: 'owner-1', title: 'Ma photo' });
+      prisma.notification.create.mockResolvedValue({});
 
-      const dto = { photoId: 'photo-1', userId: 'user-1', content: 'Belle photo, bonne lumière.' };
-      const result = await service.create(dto);
+      const result = await service.create(
+        { photoId: 'photo-1', content: 'Belle photo, bonne lumière.' },
+        'user-1',
+      );
 
       expect(prisma.review.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -61,20 +67,33 @@ describe('ReviewsService', () => {
           }),
         }),
       );
+      expect(prisma.notification.create).toHaveBeenCalled();
       expect(result).toEqual(mockReview);
+    });
+
+    it("ne crée pas de notification si le reviewer est le propriétaire", async () => {
+      prisma.review.create.mockResolvedValue(mockReview);
+      prisma.photo.findUnique.mockResolvedValue({ userId: 'user-1', title: 'Ma photo' });
+
+      await service.create({ photoId: 'photo-1', content: 'Auto-critique' }, 'user-1');
+
+      expect(prisma.notification.create).not.toHaveBeenCalled();
     });
 
     it('crée une review avec annotations', async () => {
       const reviewWithAnnotations = { ...mockReview, annotations: [{ id: 'ann-1' }] };
       prisma.review.create.mockResolvedValue(reviewWithAnnotations);
+      prisma.photo.findUnique.mockResolvedValue({ userId: 'owner-1', title: 'Titre' });
+      prisma.notification.create.mockResolvedValue({});
 
-      const dto = {
-        photoId: 'photo-1',
-        userId: 'user-1',
-        content: 'Bon cadrage.',
-        annotations: [{ type: 'arrow', data: { x: 10, y: 20 }, color: '#00ff00', comment: 'ici' }],
-      };
-      const result = await service.create(dto);
+      const result = await service.create(
+        {
+          photoId: 'photo-1',
+          content: 'Bon cadrage.',
+          annotations: [{ type: 'arrow', data: { x: 10, y: 20 }, color: '#00ff00', comment: 'ici' }],
+        },
+        'user-1',
+      );
 
       expect(prisma.review.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -92,14 +111,13 @@ describe('ReviewsService', () => {
 
     it('utilise #ff0000 comme couleur par défaut si non fournie', async () => {
       prisma.review.create.mockResolvedValue(mockReview);
+      prisma.photo.findUnique.mockResolvedValue({ userId: 'owner-1', title: 'Titre' });
+      prisma.notification.create.mockResolvedValue({});
 
-      const dto = {
-        photoId: 'photo-1',
-        userId: 'user-1',
-        content: 'Test.',
-        annotations: [{ type: 'circle', data: {} }],
-      };
-      await service.create(dto);
+      await service.create(
+        { photoId: 'photo-1', content: 'Test.', annotations: [{ type: 'circle', data: {} }] },
+        'user-1',
+      );
 
       const createCall = prisma.review.create.mock.calls[0][0];
       expect(createCall.data.annotations.create[0].color).toBe('#ff0000');

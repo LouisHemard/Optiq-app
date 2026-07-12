@@ -68,7 +68,6 @@ export async function getPhotoReviews(photoId: string): Promise<Review[]> {
 
 export interface CreateReviewPayload {
   photoId: string;
-  userId: string;
   content: string;
   annotations?: { type: string; data: Record<string, unknown>; color?: string; comment?: string }[];
 }
@@ -76,6 +75,18 @@ export interface CreateReviewPayload {
 export async function createReview(payload: CreateReviewPayload): Promise<Review> {
   const { data } = await api.post<Review>('/reviews', payload);
   return data;
+}
+
+export async function incrementPerfect(photoId: string): Promise<void> {
+  await api.patch(`/photos/${photoId}/perfect`);
+}
+
+export async function changePassword(payload: { currentPassword: string; newPassword: string }): Promise<void> {
+  await api.post('/users/me/password', payload);
+}
+
+export async function deleteMe(): Promise<void> {
+  await api.delete('/users/me');
 }
 
 export async function deletePhoto(id: string): Promise<void> {

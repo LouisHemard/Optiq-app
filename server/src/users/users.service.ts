@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
@@ -267,5 +268,21 @@ export class UsersService {
         isPrivate: true,
       },
     });
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur introuvable.');
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) throw new UnauthorizedException('Mot de passe actuel incorrect.');
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({ where: { id: userId }, data: { password: hashed } });
+    return { success: true };
+  }
+
+  async deleteMe(userId: string) {
+    return this.prisma.user.delete({ where: { id: userId } });
   }
 }

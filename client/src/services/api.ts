@@ -89,8 +89,18 @@ export async function deleteMe(): Promise<void> {
   await api.delete('/users/me');
 }
 
+export async function updatePhoto(id: string, payload: { title?: string; description?: string }): Promise<Photo> {
+  const { data } = await api.patch<Photo>(`/photos/${id}`, payload);
+  return data;
+}
+
 export async function deletePhoto(id: string): Promise<void> {
   await api.delete(`/photos/${id}`);
+}
+
+export async function updateReview(id: string, content: string): Promise<Review> {
+  const { data } = await api.patch<Review>(`/reviews/${id}`, { content });
+  return data;
 }
 
 export async function deleteReview(id: string): Promise<void> {

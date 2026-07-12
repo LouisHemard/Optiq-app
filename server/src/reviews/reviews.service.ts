@@ -81,11 +81,18 @@ export class ReviewsService {
     });
   }
 
-  update(id: string, updateReviewDto: UpdateReviewDto) {
+  async update(id: string, updateReviewDto: UpdateReviewDto, userId: string) {
+    const review = await this.prisma.review.findUnique({ where: { id } });
+    if (!review) throw new NotFoundException();
+    if (review.userId !== userId) throw new ForbiddenException();
     const { annotations: _annotations, ...scalarData } = updateReviewDto;
     return this.prisma.review.update({
       where: { id },
       data: scalarData,
+      include: {
+        annotations: true,
+        author: { select: { id: true, username: true, avatarUrl: true } },
+      },
     });
   }
 

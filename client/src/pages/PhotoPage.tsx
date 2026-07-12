@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getPhotoById, getPhotoReviews, createReview, deletePhoto, deleteReview, toggleLike, incrementPerfect } from '../services/api';
+import { getPhotoById, getPhotoReviews, createReview, updatePhoto, deletePhoto, updateReview, deleteReview, toggleLike, incrementPerfect } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ReviewCanvas, type NewAnnotation, type DrawTool } from '../components/ReviewCanvas';
 import { AnnotatedThumbnail } from '../components/AnnotatedThumbnail';
@@ -20,6 +20,7 @@ import {
   X,
   Heart,
   Star,
+  Check,
   User as UserIcon,
   Square,
   PenLine,
@@ -46,6 +47,13 @@ export function PhotoPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [perfectCount, setPerfectCount] = useState(0);
   const [votedPerfect, setVotedPerfect] = useState(false);
+  const [editingPhoto, setEditingPhoto] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [savingPhoto, setSavingPhoto] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [savingReview, setSavingReview] = useState(false);
 
   const handleLike = () => {
     if (!id) return;
@@ -55,6 +63,42 @@ export function PhotoPage() {
       setLiked((v) => !v);
       setLikesCount((c) => (liked ? c + 1 : c - 1));
     });
+  };
+
+  const handleEditPhotoStart = () => {
+    if (!photo) return;
+    setEditTitle(photo.title);
+    setEditDescription(photo.description ?? '');
+    setEditingPhoto(true);
+  };
+
+  const handleEditPhotoSave = () => {
+    if (!id || !editTitle.trim()) return;
+    setSavingPhoto(true);
+    updatePhoto(id, { title: editTitle.trim(), description: editDescription.trim() || undefined })
+      .then((updated) => {
+        setPhoto((p) => p ? { ...p, title: updated.title, description: updated.description } : p);
+        setEditingPhoto(false);
+      })
+      .catch(() => setError('Erreur lors de la modification'))
+      .finally(() => setSavingPhoto(false));
+  };
+
+  const handleEditReviewStart = (review: Review) => {
+    setEditingReviewId(review.id);
+    setEditContent(review.content);
+  };
+
+  const handleEditReviewSave = (reviewId: string) => {
+    if (!editContent.trim()) return;
+    setSavingReview(true);
+    updateReview(reviewId, editContent.trim())
+      .then((updated) => {
+        setReviews((prev) => prev.map((r) => r.id === reviewId ? { ...r, content: updated.content } : r));
+        setEditingReviewId(null);
+      })
+      .catch(() => setError('Erreur lors de la modification'))
+      .finally(() => setSavingReview(false));
   };
 
   const handlePerfect = () => {
@@ -216,27 +260,86 @@ export function PhotoPage() {
           </button>
         </div>
         {isOwner && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            onBlur={() => setConfirmDelete(false)}
-            disabled={deleting}
-            aria-label={confirmDelete ? 'Confirmer la suppression de la photo' : 'Supprimer la photo'}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              confirmDelete
-                ? 'bg-red-600 text-white hover:bg-red-500'
-                : 'bg-gray-800 text-red-400 hover:bg-gray-700'
-            } disabled:opacity-50`}
-          >
-            {deleting ? (
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Trash2 className="w-4 h-4" aria-hidden="true" />
-            )}
-            {confirmDelete ? 'Confirmer la suppression' : 'Supprimer'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleEditPhotoStart}
+              aria-label="Modifier le titre et la description"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
+            >
+              <Pencil className="w-4 h-4" aria-hidden="true" />
+              Modifier
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              onBlur={() => setConfirmDelete(false)}
+              disabled={deleting}
+              aria-label={confirmDelete ? 'Confirmer la suppression de la photo' : 'Supprimer la photo'}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                confirmDelete
+                  ? 'bg-red-600 text-white hover:bg-red-500'
+                  : 'bg-gray-800 text-red-400 hover:bg-gray-700'
+              } disabled:opacity-50`}
+            >
+              {deleting ? (
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
+              )}
+              {confirmDelete ? 'Confirmer la suppression' : 'Supprimer'}
+            </button>
+          </div>
         )}
       </div>
+
+      {editingPhoto && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleEditPhotoSave(); }}
+          className="rounded-xl bg-gray-800/80 border border-indigo-500/40 p-4 mb-6 space-y-3"
+        >
+          <div>
+            <label htmlFor="edit-title" className="block text-xs font-medium text-gray-400 mb-1">Titre</label>
+            <input
+              id="edit-title"
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              required
+              autoFocus
+              className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-desc" className="block text-xs font-medium text-gray-400 mb-1">Description (optionnel)</label>
+            <textarea
+              id="edit-desc"
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={savingPhoto || !editTitle.trim()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {savingPhoto ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              Enregistrer
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditingPhoto(false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-700 text-gray-300 text-sm font-medium hover:bg-gray-600 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              Annuler
+            </button>
+          </div>
+        </form>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
@@ -364,33 +467,75 @@ export function PhotoPage() {
               ) : (
                 reviews.map((review) => (
                   <div key={review.id} className="group rounded-lg bg-gray-700/40 p-3">
-                    <div className="flex items-start gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-gray-200 text-sm">{review.content}</p>
-                        <Link
-                          to={`/profile/${review.userId}`}
-                          className="text-gray-500 text-xs mt-1 inline-block hover:text-indigo-400 transition-colors"
-                        >
-                          — {review.author.username}
-                        </Link>
+                    {editingReviewId === review.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          rows={3}
+                          autoFocus
+                          className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-indigo-500/50 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEditReviewSave(review.id)}
+                            disabled={savingReview || !editContent.trim()}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                          >
+                            {savingReview ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                            Enregistrer
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingReviewId(null)}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-gray-600 text-gray-300 text-xs font-medium hover:bg-gray-500 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                            Annuler
+                          </button>
+                        </div>
                       </div>
-                      {user?.id === review.userId && (
-                        <button
-                          type="button"
-                          aria-label="Supprimer cette critique"
-                          title="Supprimer cette critique"
-                          onClick={() => {
-                            deleteReview(review.id).then(() =>
-                              setReviews((prev) => prev.filter((r) => r.id !== review.id)),
-                            );
-                          }}
-                          className="shrink-0 p-1 rounded text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-400"
-                        >
-                          <X className="w-3.5 h-3.5" aria-hidden="true" />
-                        </button>
-                      )}
-                    </div>
-                    {review.annotations.length > 0 && (
+                    ) : (
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-200 text-sm">{review.content}</p>
+                          <Link
+                            to={`/profile/${review.userId}`}
+                            className="text-gray-500 text-xs mt-1 inline-block hover:text-indigo-400 transition-colors"
+                          >
+                            — {review.author.username}
+                          </Link>
+                        </div>
+                        {user?.id === review.userId && (
+                          <div className="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              aria-label="Modifier cette critique"
+                              title="Modifier cette critique"
+                              onClick={() => handleEditReviewStart(review)}
+                              className="p-1 rounded text-gray-500 hover:text-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            >
+                              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Supprimer cette critique"
+                              title="Supprimer cette critique"
+                              onClick={() => {
+                                deleteReview(review.id).then(() =>
+                                  setReviews((prev) => prev.filter((r) => r.id !== review.id)),
+                                );
+                              }}
+                              className="p-1 rounded text-gray-500 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                            >
+                              <X className="w-3.5 h-3.5" aria-hidden="true" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {editingReviewId !== review.id && review.annotations.length > 0 && (
                       <div className="mt-2 max-w-[12rem]">
                         <AnnotatedThumbnail imageUrl={photo.imageUrl} annotations={review.annotations} />
                       </div>

@@ -160,9 +160,10 @@ describe('ReviewsService', () => {
   describe('update', () => {
     it('met à jour le contenu de la review', async () => {
       const updated = { ...mockReview, content: 'Mise à jour.' };
+      prisma.review.findUnique.mockResolvedValue(mockReview);
       prisma.review.update.mockResolvedValue(updated);
 
-      const result = await service.update('review-1', { content: 'Mise à jour.' });
+      const result = await service.update('review-1', { content: 'Mise à jour.' }, 'user-1');
 
       expect(prisma.review.update).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'review-1' } }),

@@ -23,7 +23,7 @@ export function SettingsPage() {
   const [pwdError, setPwdError] = useState<string | null>(null);
   const [pwdSuccess, setPwdSuccess] = useState(false);
 
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -79,10 +79,7 @@ export function SettingsPage() {
   };
 
   const handleDeleteAccount = () => {
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      return;
-    }
+    if (deleteConfirmText !== 'Optiq') return;
     setDeleting(true);
     deleteMe()
       .then(() => {
@@ -296,20 +293,29 @@ export function SettingsPage() {
         <p className="text-sm text-gray-400">
           La suppression de votre compte est <strong className="text-gray-300">irréversible</strong>. Toutes vos photos, critiques et annotations seront définitivement supprimées.
         </p>
+        <div>
+          <label htmlFor="delete-confirm" className="block text-sm text-gray-400 mb-2">
+            Tapez <strong className="text-gray-200">Optiq</strong> pour confirmer la suppression
+          </label>
+          <input
+            id="delete-confirm"
+            type="text"
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="Optiq"
+            autoComplete="off"
+            className="w-full px-4 py-2 rounded-xl bg-gray-900 border border-red-900/50 text-white placeholder-gray-600 focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+          />
+        </div>
         <button
           type="button"
           onClick={handleDeleteAccount}
-          onBlur={() => setConfirmDelete(false)}
-          disabled={deleting}
-          aria-label={confirmDelete ? 'Confirmer la suppression du compte' : 'Supprimer mon compte'}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-            confirmDelete
-              ? 'bg-red-600 text-white hover:bg-red-500'
-              : 'bg-gray-900 text-red-400 border border-red-900/50 hover:bg-red-950/50'
-          }`}
+          disabled={deleting || deleteConfirmText !== 'Optiq'}
+          aria-label="Supprimer définitivement mon compte"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-          {confirmDelete ? 'Confirmer la suppression définitive' : 'Supprimer mon compte'}
+          Supprimer définitivement mon compte
         </button>
       </div>
     </div>

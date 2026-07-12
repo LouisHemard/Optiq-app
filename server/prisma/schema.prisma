@@ -23,6 +23,7 @@ model User {
   sentFollowRequests     FollowRequest[] @relation("FollowRequestSender")
   receivedFollowRequests FollowRequest[] @relation("FollowRequestReceiver")
   notifications          Notification[]
+  perfectVotes           UserPerfectVote[]
 
   createdAt DateTime @default(now())
 }
@@ -78,7 +79,17 @@ model Photo {
   reviews           Review[]
   likes             Like[]
   perfectCount      Int       @default(0)
+  perfectVotes      UserPerfectVote[]
   createdAt         DateTime  @default(now())
+}
+
+model UserPerfectVote {
+  userId  String
+  photoId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photo   Photo  @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, photoId])
 }
 
 model Review {

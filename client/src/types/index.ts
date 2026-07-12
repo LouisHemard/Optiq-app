@@ -16,6 +16,7 @@ export interface Photo {
   iso: number | null;
   focalLength: number | null;
   perfectCount?: number;
+  hasVotedPerfect?: boolean;
   userId: string;
   user: User;
   _count?: { reviews: number; likes: number };

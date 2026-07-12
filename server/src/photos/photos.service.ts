@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { SupabaseStorageService } from '../storage/supabase-storage.service';
@@ -173,7 +173,12 @@ export class PhotosService {
     }));
   }
 
-  async incrementPerfect(id: string) {
+  async incrementPerfect(id: string, userId: string) {
+    const existing = await this.prisma.userPerfectVote.findUnique({
+      where: { userId_photoId: { userId, photoId: id } },
+    });
+    if (existing) throw new ConflictException('Vous avez déjà voté pour cette photo.');
+    await this.prisma.userPerfectVote.create({ data: { userId, photoId: id } });
     return this.prisma.photo.update({
       where: { id },
       data: { perfectCount: { increment: 1 } },
@@ -181,22 +186,30 @@ export class PhotosService {
   }
 
   async findOne(id: string, currentUserId?: string) {
-    const photo = await this.prisma.photo.findUniqueOrThrow({
-      where: { id },
-      include: {
-        user: { select: { id: true, username: true, avatarUrl: true } },
-        _count: { select: { reviews: true, likes: true } },
-        ...(currentUserId && {
-          likes: { where: { userId: currentUserId }, select: { userId: true } },
-        }),
-      },
-    });
+    const [photo, perfectVote] = await Promise.all([
+      this.prisma.photo.findUniqueOrThrow({
+        where: { id },
+        include: {
+          user: { select: { id: true, username: true, avatarUrl: true } },
+          _count: { select: { reviews: true, likes: true } },
+          ...(currentUserId && {
+            likes: { where: { userId: currentUserId }, select: { userId: true } },
+          }),
+        },
+      }),
+      currentUserId
+        ? this.prisma.userPerfectVote.findUnique({
+            where: { userId_photoId: { userId: currentUserId, photoId: id } },
+          })
+        : null,
+    ]);
     const { likes, ...rest } = photo as typeof photo & {
       likes?: { userId: string }[];
     };
     return {
       ...rest,
       isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
+      hasVotedPerfect: perfectVote !== null,
     };
   }
 

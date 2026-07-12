@@ -105,7 +105,8 @@ export function PhotoPage() {
     if (!id || !user || isOwner || votedPerfect) return;
     setVotedPerfect(true);
     setPerfectCount((c) => c + 1);
-    incrementPerfect(id).catch(() => {
+    incrementPerfect(id).catch((err) => {
+      if (err?.response?.status === 409) return;
       setVotedPerfect(false);
       setPerfectCount((c) => c - 1);
     });
@@ -137,6 +138,7 @@ export function PhotoPage() {
           setLiked(photoData.isLikedByMe ?? false);
           setLikesCount(photoData._count?.likes ?? 0);
           setPerfectCount(photoData.perfectCount ?? 0);
+          setVotedPerfect(photoData.hasVotedPerfect ?? false);
         }
       })
       .catch((err) => {

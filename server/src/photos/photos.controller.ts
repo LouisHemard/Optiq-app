@@ -97,8 +97,8 @@ export class PhotosController {
 
   @Patch(':id/perfect')
   @UseGuards(JwtAuthGuard)
-  incrementPerfect(@Param('id') id: string) {
-    return this.photosService.incrementPerfect(id);
+  incrementPerfect(@Param('id') id: string, @CurrentUser() user: CurrentUserPayload) {
+    return this.photosService.incrementPerfect(id, user.id);
   }
 
   @Delete(':id')

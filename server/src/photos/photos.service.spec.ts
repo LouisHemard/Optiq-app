@@ -42,6 +42,10 @@ const makePrisma = () => ({
     delete: jest.fn(),
     count: jest.fn(),
   },
+  userPerfectVote: {
+    findUnique: jest.fn().mockResolvedValue(null),
+    create: jest.fn(),
+  },
 });
 
 const makeLocalStorage = () => ({ save: jest.fn().mockReturnValue('http://localhost/uploads/photo.jpg') });

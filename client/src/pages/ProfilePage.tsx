@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getProfile, toggleFollow } from '../services/api';
 import type { UserProfile } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { PhotoCard } from '../components/PhotoCard';
+import { Lightbox } from '../components/Lightbox';
 import {
   Loader2,
   Settings,
@@ -26,6 +26,7 @@ export function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [followState, setFollowState] = useState<FollowState>('none');
   const [followLoading, setFollowLoading] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -205,11 +206,34 @@ export function ProfilePage() {
         profile.photos.length === 0 ? (
           <p className="text-gray-500 text-center py-12">Aucune photo pour le moment.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {profile.photos.map((photo) => (
-              <PhotoCard key={photo.id} photo={photo} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-3 gap-1">
+              {profile.photos.map((photo, i) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => setLightboxIndex(i)}
+                  aria-label={`Voir la photo : ${photo.title}`}
+                  className="aspect-square overflow-hidden rounded-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                >
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.title}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                  />
+                </button>
+              ))}
+            </div>
+            {lightboxIndex !== null && (
+              <Lightbox
+                photos={profile.photos}
+                index={lightboxIndex}
+                onClose={() => setLightboxIndex(null)}
+                onPrev={() => setLightboxIndex((i) => (i! - 1 + profile.photos.length) % profile.photos.length)}
+                onNext={() => setLightboxIndex((i) => (i! + 1) % profile.photos.length)}
+              />
+            )}
+          </>
         )
       ) : (
         <div className="text-center py-16">

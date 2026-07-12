@@ -250,6 +250,41 @@ Le pipeline répond directement aux compétences du référentiel :
 | *"Définir un protocole de déploiement continu"* | Workflow `deploy` avec `needs` + Render deploy hook |
 | *"Mettre en place un environnement de développement adapté"* | Cursor + Node 20 + Docker (section 1) |
 | *"Vérifier la non-régression"* | 62 tests automatiques à chaque PR |
+| *"Critères de qualité et de performance"* | Lighthouse + couverture de tests (section 5.4) |
+
+### 5.4 Critères de qualité et de performance
+
+#### Audit Lighthouse (production — mode navigation privée)
+
+Rapport généré sur `https://optiq-app.vercel.app` via Chrome DevTools Lighthouse.
+
+| Métrique | Score | Seuil |
+|---|---|---|
+| **Performance** | 75 / 100 | > 50 |
+| **Accessibility** | 92 / 100 | > 90 |
+| **Best Practices** | 100 / 100 | 100 |
+| **SEO** | 91 / 100 | > 90 |
+
+Le score de Performance de 75 est principalement impacté par le **First Contentful Paint (FCP)** — la première requête API vers le backend Render (plan gratuit) déclenche un cold start (~1-2 s) qui retarde l'affichage initial. Ce comportement est lié à l'hébergement gratuit et disparaîtrait avec un plan payant ou un backend toujours actif.
+
+#### Bundle frontend (Vite — production)
+
+```
+dist/index.html                  0.49 kB │ gzip:   0.32 kB
+dist/assets/index.css           29.35 kB │ gzip:   6.20 kB
+dist/assets/index.js           647.50 kB │ gzip: 198.82 kB
+✓ built in 681 ms
+```
+
+Le bundle JS de 647 kB (198 kB gzippé) intègre React, Konva (canvas annotations), Axios et l'ensemble des composants. C'est dans la norme pour une SPA avec des librairies graphiques.
+
+#### Qualité du code
+
+| Outil | Résultat |
+|---|---|
+| **ESLint** | 0 erreur — vérifié à chaque commit par la CI |
+| **TypeScript** | Compilation sans erreur — vérifiée par le build Vite |
+| **Jest** | 81 tests, 70.87 % de couverture de lignes |
 
 ---
 

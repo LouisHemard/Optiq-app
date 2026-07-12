@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const mockReview = {
   id: 'review-1',
@@ -36,6 +37,7 @@ describe('ReviewsService', () => {
       providers: [
         ReviewsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: NotificationsService, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

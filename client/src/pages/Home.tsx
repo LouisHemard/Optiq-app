@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getFeed } from '../services/api';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { getFeed, FEED_LIMIT } from '../services/api';
 import { PhotoCard } from '../components/PhotoCard';
 import type { Photo } from '../types';
 import { Loader2, SlidersHorizontal, Search, X } from 'lucide-react';
@@ -7,7 +7,10 @@ import { Loader2, SlidersHorizontal, Search, X } from 'lucide-react';
 export function Home() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [cameraModel, setCameraModel] = useState('');
@@ -15,26 +18,59 @@ export function Home() {
   const [minIso, setMinIso] = useState('');
   const [maxIso, setMaxIso] = useState('');
 
-  const fetchPhotos = useCallback((params?: Record<string, string>) => {
-    setLoading(true);
+  const activeFiltersRef = useRef<Record<string, string>>({});
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const loadPage = useCallback(async (p: number, filters: Record<string, string>, append: boolean) => {
+    if (p === 1) setLoading(true);
+    else setLoadingMore(true);
     setError(null);
-    getFeed(params)
-      .then(setPhotos)
-      .catch((err) => setError(err.message ?? 'Erreur lors du chargement du feed'))
-      .finally(() => setLoading(false));
+
+    try {
+      const params: Record<string, string | number> = { ...filters, page: p, limit: FEED_LIMIT };
+      const data = await getFeed(params);
+      setPhotos((prev) => append ? [...prev, ...data] : data);
+      setHasMore(data.length === FEED_LIMIT);
+    } catch (err: unknown) {
+      setError((err as Error).message ?? 'Erreur lors du chargement du feed');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, []);
 
   useEffect(() => {
-    fetchPhotos();
-  }, [fetchPhotos]);
+    loadPage(1, {}, false);
+  }, [loadPage]);
+
+  useEffect(() => {
+    if (page === 1) return;
+    loadPage(page, activeFiltersRef.current, true);
+  }, [page, loadPage]);
+
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          setPage((p) => p + 1);
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loading]);
 
   const handleSearch = () => {
-    const params: Record<string, string> = {};
-    if (cameraModel.trim()) params.cameraModel = cameraModel.trim();
-    if (lensModel.trim()) params.lensModel = lensModel.trim();
-    if (minIso.trim()) params.minIso = minIso.trim();
-    if (maxIso.trim()) params.maxIso = maxIso.trim();
-    fetchPhotos(Object.keys(params).length > 0 ? params : undefined);
+    const filters: Record<string, string> = {};
+    if (cameraModel.trim()) filters.cameraModel = cameraModel.trim();
+    if (lensModel.trim()) filters.lensModel = lensModel.trim();
+    if (minIso.trim()) filters.minIso = minIso.trim();
+    if (maxIso.trim()) filters.maxIso = maxIso.trim();
+    activeFiltersRef.current = filters;
+    setPage(1);
+    loadPage(1, filters, false);
   };
 
   const handleReset = () => {
@@ -42,7 +78,9 @@ export function Home() {
     setLensModel('');
     setMinIso('');
     setMaxIso('');
-    fetchPhotos();
+    activeFiltersRef.current = {};
+    setPage(1);
+    loadPage(1, {}, false);
   };
 
   const hasActiveFilters = cameraModel || lensModel || minIso || maxIso;
@@ -163,11 +201,25 @@ export function Home() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {photos.map((photo) => (
-            <PhotoCard key={photo.id} photo={photo} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {photos.map((photo) => (
+              <PhotoCard key={photo.id} photo={photo} />
+            ))}
+          </div>
+
+          <div ref={sentinelRef} className="flex items-center justify-center py-8">
+            {loadingMore && (
+              <>
+                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" aria-hidden="true" />
+                <span className="sr-only">Chargement de la suite</span>
+              </>
+            )}
+            {!hasMore && photos.length > 0 && (
+              <p className="text-gray-600 text-sm">Vous avez tout vu !</p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

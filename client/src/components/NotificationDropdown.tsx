@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import {
   Bell,
@@ -40,6 +41,7 @@ const ICON_MAP: Record<string, typeof UserPlus> = {
 };
 
 export function NotificationDropdown() {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'notifs' | 'requests'>('notifs');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -49,12 +51,22 @@ export function NotificationDropdown() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!user) return;
     getUnreadCount().then(setUnread).catch(() => {});
-    const interval = setInterval(() => {
-      getUnreadCount().then(setUnread).catch(() => {});
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const token = localStorage.getItem('optiq_token');
+    if (!token) return;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+    const es = new EventSource(`${baseUrl}/notifications/stream?token=${token}`);
+    es.onmessage = () => {
+      setUnread((c) => c + 1);
+    };
+    es.onerror = () => es.close();
+    return () => es.close();
+  }, [user]);
 
   useEffect(() => {
     if (!open) return;

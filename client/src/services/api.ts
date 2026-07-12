@@ -56,6 +56,8 @@ export async function getFeed(params?: Record<string, string | number | undefine
   return data;
 }
 
+export const FEED_LIMIT = 12;
+
 export async function getPhotoById(id: string): Promise<Photo> {
   const { data } = await api.get<Photo>(`/photos/${id}`);
   return data;

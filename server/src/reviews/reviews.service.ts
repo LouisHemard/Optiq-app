@@ -4,12 +4,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Injectable()
 export class ReviewsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async create(createReviewDto: CreateReviewDto, reviewerId: string) {
     const annotations = createReviewDto.annotations ?? [];
@@ -47,6 +51,7 @@ export class ReviewsService {
           relatedId: createReviewDto.photoId,
         },
       });
+      this.notificationsService.emit(photo.userId, { type: 'NEW_NOTIFICATION' });
     }
 
     return review;

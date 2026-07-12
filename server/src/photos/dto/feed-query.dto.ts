@@ -5,4 +5,6 @@ export class FeedQueryDto {
   maxIso?: string;
   minAperture?: string;
   maxAperture?: string;
+  page?: number;
+  limit?: number;
 }

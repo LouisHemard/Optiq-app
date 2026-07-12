@@ -155,6 +155,9 @@ export class PhotosService {
       };
     }
 
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(query.limit) || 12));
+
     const photos = await this.prisma.photo.findMany({
       where,
       include: {
@@ -165,6 +168,8 @@ export class PhotosService {
         }),
       },
       orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
     return photos.map(({ likes, ...photo }) => ({

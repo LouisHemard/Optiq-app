@@ -25,6 +25,7 @@ export function SettingsPage() {
 
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -81,12 +82,16 @@ export function SettingsPage() {
   const handleDeleteAccount = () => {
     if (deleteConfirmText !== 'Optiq') return;
     setDeleting(true);
+    setDeleteError(null);
     deleteMe()
       .then(() => {
         logoutUser();
         navigate('/');
       })
-      .catch(() => setDeleting(false));
+      .catch((err) => {
+        setDeleteError(err.response?.data?.message ?? 'Erreur lors de la suppression du compte.');
+        setDeleting(false);
+      });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -293,6 +298,7 @@ export function SettingsPage() {
         <p className="text-sm text-gray-400">
           La suppression de votre compte est <strong className="text-gray-300">irréversible</strong>. Toutes vos photos, critiques et annotations seront définitivement supprimées.
         </p>
+        {deleteError && <p className="text-red-400 text-sm" role="alert">{deleteError}</p>}
         <div>
           <label htmlFor="delete-confirm" className="block text-sm text-gray-400 mb-2">
             Tapez <strong className="text-gray-200">Optiq</strong> pour confirmer la suppression

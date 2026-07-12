@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 
 const mockUser = {
   id: 'user-1',
@@ -45,6 +46,7 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         { provide: PrismaService, useValue: prisma },
+        { provide: MailService, useValue: { sendVerificationEmail: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

@@ -35,7 +35,9 @@ export class UsersService {
     };
     try {
       const user = await this.prisma.user.create({ data });
-      this.mailService.sendVerificationEmail(user.email, verifyToken).catch(() => {});
+      this.mailService.sendVerificationEmail(user.email, verifyToken).catch((err) => {
+        console.error('[MailService] Erreur envoi email vérification:', err?.message ?? err);
+      });
       return user;
     } catch (err: unknown) {
       console.error('[UsersService.create]', err);

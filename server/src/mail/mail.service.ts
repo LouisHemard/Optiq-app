@@ -22,10 +22,14 @@ export class MailService {
   }
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
-    if (!this.transporter) return;
+    if (!this.transporter) {
+      console.warn('[MailService] Transporter non initialisé, email non envoyé.');
+      return;
+    }
+    console.log('[MailService] Envoi email vérification à:', email);
     const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
     await this.transporter.sendMail({
-      from: `"Optiq" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: process.env.SMTP_FROM || 'onboarding@resend.dev',
       to: email,
       subject: 'Vérifiez votre adresse email — Optiq',
       html: `

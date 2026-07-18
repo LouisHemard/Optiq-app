@@ -89,9 +89,10 @@ export function Home() {
   const hasActiveFilters = cameraModel || lensModel || minIso || maxIso;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6 items-start">
-      {/* Colonne gauche — feed (65%) */}
-      <div className="w-[65%] min-w-0">
+    <div className="flex h-[calc(100vh-65px)]">
+      {/* Colonne gauche — feed scrollable (65%) */}
+      <div className="flex-1 overflow-y-auto min-w-0">
+        <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="mb-6">
           <button
             type="button"
@@ -226,12 +227,13 @@ export function Home() {
             </div>
           </>
         )}
+        </div>
       </div>
 
-      {/* Colonne droite — sidebar fixe (35%), connecté uniquement */}
+      {/* Colonne droite — ne scroll PAS, hauteur = viewport - navbar */}
       {user && (
-        <aside className="hidden lg:block w-[35%] flex-shrink-0">
-          <div className="sticky top-20">
+        <aside className="hidden lg:flex w-[35%] flex-shrink-0 border-l border-gray-800 px-6 py-6 overflow-y-auto">
+          <div className="w-full">
             <SuggestedUsers />
           </div>
         </aside>

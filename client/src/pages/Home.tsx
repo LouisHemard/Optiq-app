@@ -89,9 +89,9 @@ export function Home() {
   const hasActiveFilters = cameraModel || lensModel || minIso || maxIso;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 flex gap-8 items-start">
-      {/* Colonne gauche — feed */}
-      <div className="flex-1 min-w-0">
+    <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6 items-start">
+      {/* Colonne gauche — feed (65%) */}
+      <div className="w-[65%] min-w-0">
         <div className="mb-6">
           <button
             type="button"
@@ -207,7 +207,7 @@ export function Home() {
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 max-w-xl mx-auto">
               {photos.map((photo) => (
                 <PhotoCard key={photo.id} photo={photo} />
               ))}
@@ -228,9 +228,9 @@ export function Home() {
         )}
       </div>
 
-      {/* Colonne droite — sidebar sticky (connecté uniquement, écrans larges) */}
+      {/* Colonne droite — sidebar fixe (35%), connecté uniquement */}
       {user && (
-        <aside className="hidden lg:block w-64 flex-shrink-0">
+        <aside className="hidden lg:block w-[35%] flex-shrink-0">
           <div className="sticky top-20">
             <SuggestedUsers />
           </div>

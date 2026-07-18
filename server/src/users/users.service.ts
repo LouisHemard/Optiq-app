@@ -335,6 +335,36 @@ export class UsersService {
     return { success: true };
   }
 
+  async getSuggestions(userId: string, limit = 6) {
+    const me = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { following: { select: { id: true } } },
+    });
+    const followingIds = me?.following.map((u) => u.id) ?? [];
+    const exclude = [...followingIds, userId];
+    const select = { id: true, username: true, avatarUrl: true };
+
+    const fof = await this.prisma.user.findMany({
+      where: {
+        id: { notIn: exclude },
+        followers: { some: { id: { in: followingIds } } },
+      },
+      take: limit,
+      select,
+    });
+
+    if (fof.length < limit) {
+      const extra = await this.prisma.user.findMany({
+        where: { id: { notIn: [...exclude, ...fof.map((u) => u.id)] } },
+        take: limit - fof.length,
+        select,
+        orderBy: { createdAt: 'desc' },
+      });
+      return [...fof, ...extra];
+    }
+    return fof;
+  }
+
   async deleteMe(userId: string) {
     return this.prisma.$transaction(async (tx) => {
       await tx.annotation.deleteMany({ where: { review: { userId } } });

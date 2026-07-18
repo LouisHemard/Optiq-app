@@ -154,6 +154,17 @@ export async function toggleFollow(userId: string): Promise<{ status: string }> 
   return data;
 }
 
+export interface SuggestedUser {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+export async function getUserSuggestions(): Promise<SuggestedUser[]> {
+  const { data } = await api.get<SuggestedUser[]>('/users/suggestions');
+  return data;
+}
+
 export interface FollowRequestItem {
   id: string;
   followerId: string;

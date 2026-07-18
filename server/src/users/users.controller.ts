@@ -57,6 +57,12 @@ export class UsersController {
     return this.usersService.searchUsers(q);
   }
 
+  @Get('suggestions')
+  @UseGuards(JwtAuthGuard)
+  getSuggestions(@CurrentUser() user: CurrentUserPayload) {
+    return this.usersService.getSuggestions(user.id);
+  }
+
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   updateSettings(

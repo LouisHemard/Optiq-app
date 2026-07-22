@@ -50,13 +50,18 @@ export function PhotoCard({ photo }: PhotoCardProps) {
       aria-label={`Voir la photo « ${photo.title} » de ${photo.user.username}`}
       className="group flex flex-col h-full rounded-xl overflow-hidden bg-gray-800/80 border border-gray-700 hover:border-gray-500 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
     >
-      <div className="aspect-[4/3] bg-gray-900 overflow-hidden flex items-center justify-center">
+      <div className="aspect-[4/3] bg-gray-900 overflow-hidden flex items-center justify-center relative">
         <img
           src={imgError ? PLACEHOLDER_IMAGE : photo.imageUrl}
           alt={imgError ? `Image indisponible pour la photo « ${photo.title} »` : photo.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={() => setImgError(true)}
         />
+        {!imgError && (
+          <span className="absolute bottom-1.5 right-2 text-white/50 text-[10px] font-medium pointer-events-none select-none drop-shadow">
+            © {photo.user.username} · OPTIQ
+          </span>
+        )}
       </div>
       <div className="p-4 flex flex-col flex-1">
         <div className="flex-1">

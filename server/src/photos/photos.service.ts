@@ -19,6 +19,15 @@ export class PhotosService {
     private readonly supabaseStorage: SupabaseStorageService,
   ) {}
 
+  private async withSignedUrl<T extends { imageUrl: string }>(photo: T): Promise<T> {
+    if (!this.supabaseStorage.isConfigured()) return photo;
+    if (!this.supabaseStorage.isSupabaseUrl(photo.imageUrl)) return photo;
+    const path = this.supabaseStorage.extractPath(photo.imageUrl);
+    if (!path) return photo;
+    const signedUrl = await this.supabaseStorage.createSignedUrl(path);
+    return signedUrl ? { ...photo, imageUrl: signedUrl } : photo;
+  }
+
   private async resolveImageUrl(file: Express.Multer.File): Promise<string> {
     if (this.supabaseStorage.isConfigured()) {
       try {
@@ -172,10 +181,14 @@ export class PhotosService {
       take: limit,
     });
 
-    return photos.map(({ likes, ...photo }) => ({
-      ...photo,
-      isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
-    }));
+    return Promise.all(
+      photos.map(({ likes, ...photo }) =>
+        this.withSignedUrl({
+          ...photo,
+          isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
+        }),
+      ),
+    );
   }
 
   async incrementPerfect(id: string, userId: string) {
@@ -211,11 +224,11 @@ export class PhotosService {
     const { likes, ...rest } = photo as typeof photo & {
       likes?: { userId: string }[];
     };
-    return {
+    return this.withSignedUrl({
       ...rest,
       isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
       hasVotedPerfect: perfectVote !== null,
-    };
+    });
   }
 
   async getExplore(currentUserId?: string) {
@@ -239,10 +252,14 @@ export class PhotosService {
       },
     });
 
-    return photos.map(({ likes, ...photo }) => ({
-      ...photo,
-      isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
-    }));
+    return Promise.all(
+      photos.map(({ likes, ...photo }) =>
+        this.withSignedUrl({
+          ...photo,
+          isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
+        }),
+      ),
+    );
   }
 
   async toggleLike(photoId: string, userId: string) {

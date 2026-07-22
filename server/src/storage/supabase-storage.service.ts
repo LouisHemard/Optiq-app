@@ -8,6 +8,7 @@ const MAX_FILENAME_LENGTH = 200;
 export class SupabaseStorageService {
   private readonly client: SupabaseClient | null = null;
   private readonly bucket: string;
+  private readonly supabaseUrl: string | null = null;
 
   constructor() {
     const url = process.env.SUPABASE_URL?.trim();
@@ -16,6 +17,7 @@ export class SupabaseStorageService {
     this.bucket = bucket || 'photos';
     if (url && key) {
       this.client = createClient(url, key);
+      this.supabaseUrl = url;
     }
   }
 
@@ -23,10 +25,26 @@ export class SupabaseStorageService {
     return this.client !== null;
   }
 
-  /**
-   * Upload vers Supabase Storage et retourne l’URL publique.
-   * @throws si Supabase n’est pas configuré ou si l’upload échoue
-   */
+  isSupabaseUrl(url: string): boolean {
+    return !!this.supabaseUrl && url.startsWith(this.supabaseUrl);
+  }
+
+  extractPath(publicUrl: string): string | null {
+    const marker = `/object/public/${this.bucket}/`;
+    const idx = publicUrl.indexOf(marker);
+    if (idx === -1) return null;
+    return publicUrl.slice(idx + marker.length);
+  }
+
+  async createSignedUrl(path: string, expiresIn = 3600): Promise<string | null> {
+    if (!this.client) return null;
+    const { data, error } = await this.client.storage
+      .from(this.bucket)
+      .createSignedUrl(path, expiresIn);
+    if (error || !data) return null;
+    return data.signedUrl;
+  }
+
   async save(file: Express.Multer.File): Promise<string> {
     if (!this.client) {
       throw new Error(

@@ -61,11 +61,16 @@ export function Lightbox({ photos, index, onClose, onPrev, onNext }: Props) {
         className="flex flex-col items-center gap-4 max-w-4xl w-full px-16 max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={photo.imageUrl}
-          alt={photo.title}
-          className="max-h-[75vh] max-w-full object-contain rounded-lg"
-        />
+        <div className="relative inline-flex">
+          <img
+            src={photo.imageUrl}
+            alt={photo.title}
+            className="max-h-[75vh] max-w-full object-contain rounded-lg"
+          />
+          <span className="absolute bottom-2 right-2 text-white/50 text-xs font-medium pointer-events-none select-none drop-shadow">
+            © {photo.user?.username} · OPTIQ
+          </span>
+        </div>
         <div className="flex items-center justify-between w-full">
           <div className="min-w-0">
             <p className="text-white font-semibold truncate">{photo.title}</p>

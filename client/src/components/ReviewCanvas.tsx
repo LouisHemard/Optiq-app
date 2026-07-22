@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Stage, Layer, Image as KonvaImg, Rect, Line } from 'react-konva';
+import { Stage, Layer, Image as KonvaImg, Rect, Line, Text as KonvaText } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import useImage from 'use-image';
 
@@ -53,6 +53,7 @@ export interface NewAnnotation {
 
 export interface ReviewCanvasProps {
   imageUrl: string;
+  authorUsername?: string;
   pendingAnnotations?: NewAnnotation[];
   nextColor?: string;
   tool?: DrawTool;
@@ -61,6 +62,7 @@ export interface ReviewCanvasProps {
 
 export function ReviewCanvas({
   imageUrl,
+  authorUsername,
   pendingAnnotations = [],
   nextColor = '#ff0000',
   tool = 'rectangle',
@@ -288,6 +290,24 @@ export function ReviewCanvas({
               lineJoin="round"
               tension={0.4}
               closed={true}
+              listening={false}
+            />
+          )}
+
+          {authorUsername && (
+            <KonvaText
+              text={`© ${authorUsername} · OPTIQ`}
+              x={stageW - 170}
+              y={stageH - 22}
+              width={160}
+              align="right"
+              fontSize={12}
+              fontFamily="sans-serif"
+              fill="rgba(255,255,255,0.45)"
+              shadowColor="rgba(0,0,0,0.7)"
+              shadowBlur={4}
+              shadowOffsetX={1}
+              shadowOffsetY={1}
               listening={false}
             />
           )}

@@ -441,6 +441,7 @@ export function PhotoPage() {
           <div className="flex justify-center">
             <ReviewCanvas
               imageUrl={photo.imageUrl}
+              authorUsername={photo.user.username}
               pendingAnnotations={pendingAnnotations}
               nextColor={nextColor}
               tool={drawTool}

@@ -19,10 +19,11 @@ export class PhotosService {
     private readonly supabaseStorage: SupabaseStorageService,
   ) {}
 
-  private async withSignedUrl<T extends { imageUrl: string }>(photo: T): Promise<T> {
-    if (!this.supabaseStorage.isConfigured()) return photo;
-    if (!this.supabaseStorage.isSupabaseUrl(photo.imageUrl)) return photo;
-    const path = this.supabaseStorage.extractPath(photo.imageUrl);
+  private async withSignedUrl<T extends object>(photo: T): Promise<T> {
+    const imageUrl = (photo as { imageUrl?: unknown }).imageUrl;
+    if (!this.supabaseStorage.isConfigured() || typeof imageUrl !== 'string') return photo;
+    if (!this.supabaseStorage.isSupabaseUrl(imageUrl)) return photo;
+    const path = this.supabaseStorage.extractPath(imageUrl);
     if (!path) return photo;
     const signedUrl = await this.supabaseStorage.createSignedUrl(path);
     return signedUrl ? { ...photo, imageUrl: signedUrl } : photo;
@@ -182,12 +183,10 @@ export class PhotosService {
     });
 
     return Promise.all(
-      photos.map(({ likes, ...photo }) =>
-        this.withSignedUrl({
-          ...photo,
-          isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
-        }),
-      ),
+      photos.map(async ({ likes, ...photo }) => {
+        const p = await this.withSignedUrl(photo);
+        return { ...p, isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false };
+      }),
     );
   }
 
@@ -224,11 +223,8 @@ export class PhotosService {
     const { likes, ...rest } = photo as typeof photo & {
       likes?: { userId: string }[];
     };
-    return this.withSignedUrl({
-      ...rest,
-      isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
-      hasVotedPerfect: perfectVote !== null,
-    });
+    const p = await this.withSignedUrl(rest);
+    return { ...p, isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false, hasVotedPerfect: perfectVote !== null };
   }
 
   async getExplore(currentUserId?: string) {
@@ -253,12 +249,10 @@ export class PhotosService {
     });
 
     return Promise.all(
-      photos.map(({ likes, ...photo }) =>
-        this.withSignedUrl({
-          ...photo,
-          isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false,
-        }),
-      ),
+      photos.map(async ({ likes, ...photo }) => {
+        const p = await this.withSignedUrl(photo);
+        return { ...p, isLikedByMe: currentUserId ? (likes?.length ?? 0) > 0 : false };
+      }),
     );
   }
 

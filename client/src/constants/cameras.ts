@@ -1,5 +1,4 @@
 export const POPULAR_CAMERAS = [
-  // --- SONY ---
   "Sony Alpha A1",
   "Sony Alpha A9 II",
   "Sony Alpha A9",
@@ -19,8 +18,6 @@ export const POPULAR_CAMERAS = [
   "Sony FX30",
   "Sony ZV-E10",
   "Sony ZV-1",
-
-  // --- CANON ---
   "Canon EOS R1",
   "Canon EOS R3",
   "Canon EOS R5",
@@ -40,8 +37,6 @@ export const POPULAR_CAMERAS = [
   "Canon EOS 90D",
   "Canon EOS 80D",
   "Canon EOS 7D Mark II",
-
-  // --- NIKON ---
   "Nikon Z9",
   "Nikon Z8",
   "Nikon Z7 II",
@@ -60,8 +55,6 @@ export const POPULAR_CAMERAS = [
   "Nikon D500",
   "Nikon D7500",
   "Nikon D7200",
-
-  // --- FUJIFILM ---
   "Fujifilm GFX 100 II",
   "Fujifilm GFX 100S",
   "Fujifilm GFX 50S II",
@@ -78,8 +71,6 @@ export const POPULAR_CAMERAS = [
   "Fujifilm X100VI",
   "Fujifilm X100V",
   "Fujifilm X100F",
-
-  // --- PANASONIC / LUMIX ---
   "Panasonic Lumix S1H",
   "Panasonic Lumix S1R",
   "Panasonic Lumix S1",
@@ -90,8 +81,6 @@ export const POPULAR_CAMERAS = [
   "Panasonic Lumix GH5 II",
   "Panasonic Lumix GH5",
   "Panasonic Lumix G9 II",
-
-  // --- LEICA ---
   "Leica M11",
   "Leica M10",
   "Leica Q3",
@@ -99,16 +88,12 @@ export const POPULAR_CAMERAS = [
   "Leica SL3",
   "Leica SL2",
   "Leica SL2-S",
-
-  // --- OM SYSTEM / OLYMPUS ---
   "OM System OM-1 Mark II",
   "OM System OM-1",
   "OM System OM-5",
   "Olympus OM-D E-M1 Mark III",
   "Olympus OM-D E-M5 Mark III",
-
-  // --- SMARTPHONES (Génériques) ---
   "Apple iPhone (iOS)",
   "Samsung Galaxy (Android)",
-  "Google Pixel (Android)"
+  "Google Pixel (Android)",
 ] as const;

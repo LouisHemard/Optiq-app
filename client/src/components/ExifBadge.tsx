@@ -4,17 +4,12 @@ interface ExifBadgeProps {
   icon: LucideIcon;
   label: string;
   tooltip: { title: string; description: string };
-  small?: boolean;
 }
 
-export function ExifBadge({ icon: Icon, label, tooltip, small = false }: ExifBadgeProps) {
+export function ExifBadge({ icon: Icon, label, tooltip }: ExifBadgeProps) {
   return (
     <div className="relative group/exif inline-flex">
-      <span
-        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-700/80 text-gray-300 cursor-default ${
-          small ? 'text-xs' : 'text-xs'
-        }`}
-      >
+      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-700/80 text-gray-300 text-xs cursor-default">
         <Icon className="w-3.5 h-3.5 shrink-0" />
         <span className="truncate max-w-[120px]">{label}</span>
       </span>

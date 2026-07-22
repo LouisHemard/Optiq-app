@@ -90,7 +90,6 @@ export function Home() {
 
   return (
     <div className="flex h-[calc(100vh-65px)]">
-      {/* Colonne gauche — feed scrollable (65%) */}
       <div className="flex-1 overflow-y-auto min-w-0">
         <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="mb-6">
@@ -230,7 +229,6 @@ export function Home() {
         </div>
       </div>
 
-      {/* Colonne droite — ne scroll PAS, hauteur = viewport - navbar */}
       {user && (
         <aside className="hidden lg:flex w-[35%] flex-shrink-0 border-l border-gray-800 px-6 py-6 overflow-y-auto">
           <div className="w-full">

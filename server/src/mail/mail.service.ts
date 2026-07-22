@@ -16,7 +16,6 @@ export class MailService {
   async sendVerificationEmail(email: string, token: string): Promise<void> {
     if (!this.resend) return;
     const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-    console.log('[MailService] Envoi email vérification à:', email);
     const { error } = await this.resend.emails.send({
       from: 'onboarding@resend.dev',
       to: email,

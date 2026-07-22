@@ -18,9 +18,6 @@ export class LocalStorageService {
     mkdirSync(this.uploadsPath, { recursive: true });
   }
 
-  /**
-   * Sauvegarde le fichier sur le disque et retourne l’URL publique.
-   */
   save(file: Express.Multer.File): string {
     const ext = this.getExtension(file.originalname) || '.jpg';
     const filename = `${randomUUID()}${ext}`;

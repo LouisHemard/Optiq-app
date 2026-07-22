@@ -19,7 +19,25 @@ export class UsersService {
     private readonly mailService: MailService,
   ) {}
 
+  private validatePassword(password: string): void {
+    if (!password || password.length < 9)
+      throw new BadRequestException('Le mot de passe doit faire au moins 9 caractères.');
+    if (!/\d/.test(password))
+      throw new BadRequestException('Le mot de passe doit contenir au moins un chiffre.');
+    if (!/[^a-zA-Z0-9]/.test(password))
+      throw new BadRequestException('Le mot de passe doit contenir au moins un caractère spécial.');
+  }
+
   async create(createUserDto: CreateUserDto) {
+    const email = String(createUserDto.email ?? '').trim();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+      throw new BadRequestException('Email invalide.');
+    const username = String(createUserDto.username ?? '').trim();
+    if (username.length < 3)
+      throw new BadRequestException("Le nom d'utilisateur doit faire au moins 3 caractères.");
+    if (username.length > 30)
+      throw new BadRequestException("Le nom d'utilisateur ne peut pas dépasser 30 caractères.");
+    this.validatePassword(String(createUserDto.password ?? ''));
     const hashedPassword = await bcrypt.hash(
       String(createUserDto.password),
       10,
@@ -81,6 +99,7 @@ export class UsersService {
   }
 
   async resetPassword(token: string, newPassword: string) {
+    this.validatePassword(String(newPassword ?? ''));
     const user = await this.prisma.user.findUnique({ where: { resetToken: token } });
     if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
       throw new BadRequestException('Lien de réinitialisation invalide ou expiré.');
@@ -324,6 +343,7 @@ export class UsersService {
   }
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    this.validatePassword(String(newPassword ?? ''));
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable.');
 

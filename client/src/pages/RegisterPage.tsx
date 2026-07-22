@@ -2,7 +2,15 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { createUser } from '../services/api';
-import { Loader2, UserPlus, LogIn } from 'lucide-react';
+import { Loader2, UserPlus, LogIn, Check, X } from 'lucide-react';
+
+function passwordRules(pwd: string) {
+  return {
+    length: pwd.length >= 9,
+    digit: /\d/.test(pwd),
+    special: /[^a-zA-Z0-9]/.test(pwd),
+  };
+}
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -14,9 +22,13 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
+  const rules = passwordRules(password);
+  const passwordValid = rules.length && rules.digit && rules.special;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !username.trim() || !password.trim()) return;
+    if (!passwordValid) return;
     setError(null);
     setLoading(true);
     try {
@@ -107,11 +119,25 @@ export function RegisterPage() {
             autoComplete="new-password"
             className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           />
+          {password.length > 0 && (
+            <ul className="mt-2 space-y-1" aria-label="Exigences du mot de passe">
+              {[
+                { ok: rules.length, label: '9 caractères minimum' },
+                { ok: rules.digit, label: 'Au moins un chiffre' },
+                { ok: rules.special, label: 'Au moins un caractère spécial' },
+              ].map(({ ok, label }) => (
+                <li key={label} className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-400' : 'text-gray-500'}`}>
+                  {ok ? <Check className="w-3 h-3" aria-hidden="true" /> : <X className="w-3 h-3" aria-hidden="true" />}
+                  {label}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <button
           type="submit"
-          disabled={loading || !email.trim() || !username.trim() || !password.trim()}
+          disabled={loading || !email.trim() || !username.trim() || !passwordValid}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? (
